@@ -1,0 +1,41 @@
+name: chequeos
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  chequeos:
+    name: chequeos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Estructura del repositorio (base-plataforma-05)
+        run: |
+          faltan=0
+          for d in docs contrato backend apps/comun apps/nativo apps/web apps/apple apps/android plataforma vigia; do
+            if [ ! -d "$d" ]; then echo "::error::Falta la carpeta $d"; faltan=1; fi
+          done
+          for f in CLAUDE.md plataforma/secretos.ejemplo.env; do
+            if [ ! -f "$f" ]; then echo "::error::Falta el archivo $f"; faltan=1; fi
+          done
+          exit $faltan
+
+      - name: Sin archivos de secretos versionados (base-plataforma-20)
+        run: |
+          sobran=$(git ls-files | grep -E '\.env($|\.)' | grep -v '\.ejemplo\.env$' || true)
+          if [ -n "$sobran" ]; then
+            echo "::error::Archivos de secretos en el repositorio: $sobran"
+            exit 1
+          fi
+
+      - name: El ejemplo de secretos no trae valores
+        run: |
+          con_valor=$(grep -vE '^\s*(#|$)' plataforma/secretos.ejemplo.env | grep -E '=\s*\S' || true)
+          if [ -n "$con_valor" ]; then
+            echo "::error::secretos.ejemplo.env tiene valores: usá solo NOMBRE="
+            exit 1
+          fi

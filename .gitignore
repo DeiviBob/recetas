@@ -1,0 +1,8 @@
+# Secretos: solo el ejemplo se versiona
+*.env
+!*.ejemplo.env
+.env.*
+
+# Código generado: se genera al compilar, no se guarda
+backend/api/
+apps/comun/lib/api/
